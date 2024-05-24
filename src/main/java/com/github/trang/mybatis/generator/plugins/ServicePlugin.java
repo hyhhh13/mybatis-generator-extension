@@ -22,8 +22,8 @@ import java.util.Properties;
  */
 public class ServicePlugin extends PluginAdapter {
 
-    private String baseService;
-    private String baseServiceImpl;
+    private String baseService = null;
+    private String baseServiceImpl = null;
     private String targetProject;
     private String targetPackage;
 
@@ -33,14 +33,10 @@ public class ServicePlugin extends PluginAdapter {
         String baseService = this.properties.getProperty("baseService");
         if (StringUtility.stringHasValue(baseService)) {
             this.baseService = baseService;
-        } else {
-            throw new RuntimeException("baseService 属性不能为空！");
         }
         String baseServiceImpl = this.properties.getProperty("baseServiceImpl");
         if (StringUtility.stringHasValue(baseServiceImpl)) {
             this.baseServiceImpl = baseServiceImpl;
-        } else {
-            throw new RuntimeException("baseServiceImpl 属性不能为空！");
         }
         String targetProject = this.properties.getProperty("targetProject");
         if (StringUtility.stringHasValue(targetProject)) {
@@ -78,10 +74,19 @@ public class ServicePlugin extends PluginAdapter {
         // 设置作用域
         interfaze.setVisibility(JavaVisibility.PUBLIC);
         // import
-        interfaze.addImportedType(new FullyQualifiedJavaType(baseService));
+        boolean baseServiceFlag = true;
+        if (baseService == null || baseService.trim().length() == 0) {
+            baseServiceFlag = false;
+        }
+        if (baseServiceFlag) {
+            interfaze.addImportedType(new FullyQualifiedJavaType(baseService));
+
+        }
         interfaze.addImportedType(entityType);
-        interfaze.addSuperInterface(new FullyQualifiedJavaType(
-                baseService + "<" + entityType.getShortName() + "," + primaryType.getShortName() + ">"));
+        if (baseServiceFlag) {
+            interfaze.addSuperInterface(new FullyQualifiedJavaType(
+                    baseService + "<" + entityType.getShortName() + "," + primaryType.getShortName() + ">"));
+        }
         ElementHelper.addAuthorTag(interfaze, false);
         return new GeneratedJavaFile(interfaze, targetProject, new DefaultJavaFormatter());
     }
@@ -93,14 +98,20 @@ public class ServicePlugin extends PluginAdapter {
         String service = targetPackage + "." + domainObjectName + "Service";
         String serviceImpl = targetPackage + ".impl." + domainObjectName + "ServiceImpl";
         TopLevelClass clazz = new TopLevelClass(new FullyQualifiedJavaType(serviceImpl));
-        clazz.addImportedType(new FullyQualifiedJavaType(baseServiceImpl));
+        if (StringUtility.stringHasValue(baseServiceImpl)){
+            clazz.addImportedType(new FullyQualifiedJavaType(baseServiceImpl));
+
+        }
         clazz.addImportedType(entityType);
         clazz.addImportedType(new FullyQualifiedJavaType(service));
         clazz.addImportedType(new FullyQualifiedJavaType("org.springframework.stereotype.Service"));
         clazz.addAnnotation("@Service(\"" + firstLetterLowerCase(domainObjectName + "Service") + "\")");
         clazz.setVisibility(JavaVisibility.PUBLIC);
-        clazz.setSuperClass(new FullyQualifiedJavaType(
-                baseServiceImpl + "<" + entityType.getShortName() + "," + primaryType.getShortName() + ">"));
+        if (StringUtility.stringHasValue(baseServiceImpl)){
+            clazz.setSuperClass(new FullyQualifiedJavaType(
+                    baseServiceImpl + "<" + entityType.getShortName() + "," + primaryType.getShortName() + ">"));
+        }
+
         clazz.addSuperInterface(new FullyQualifiedJavaType(service));
         ElementHelper.addAuthorTag(clazz, false);
         return new GeneratedJavaFile(clazz, targetProject, new DefaultJavaFormatter());

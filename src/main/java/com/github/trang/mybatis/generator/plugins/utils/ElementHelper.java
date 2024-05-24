@@ -21,9 +21,10 @@ public class ElementHelper {
     }
 
     public static void addAuthorTag(JavaElement element, boolean markAsDoNotDelete) {
-        element.addJavaDocLine(" * ");
+        element.addJavaDocLine("/** ");
         StringBuilder sb = new StringBuilder();
         sb.append(" * ");
+        element.addJavaDocLine(" * @description ");
         element.addJavaDocLine(" * @author mbg");
         sb.append(MergeConstants.NEW_ELEMENT_TAG);
         if (markAsDoNotDelete) {
@@ -33,6 +34,7 @@ public class ElementHelper {
         SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
         String s = format.format(new Date());
         element.addJavaDocLine(" * @since " + s);
+        element.addJavaDocLine("*/");
     }
 
     public static void addMergeTag(JavaElement element) {
